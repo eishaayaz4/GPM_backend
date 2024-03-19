@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from flask import Flask, render_template,jsonify,request
+from flask import Flask,request
 from ultralytics import YOLO
 
 
@@ -65,7 +65,7 @@ def removeFromGroupPhoto():
                     cv2.waitKey(0)
                     cv2.destroyAllWindows()
                     cv2.imwrite('result_image.jpg', result)
-                    return {"Message": "image saved successfully"}, 200
+                    return result
                     break  # Break out of the loop after processing the correct bounding box
 
         # If no bounding box contains the point (x, y), return an error response

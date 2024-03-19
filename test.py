@@ -50,6 +50,7 @@ bounding_boxes = detectYolo(group_image)
 if bounding_boxes is not None:
     for i, bounding_box in enumerate(bounding_boxes):
         x1, y1, x2, y2 = map(int, bounding_box[:4])
+        print("cordinates",x1,x2,y1,y2)
         person_image = group_image[y1:y2, x1:x2]
         resized_person = resize_group_to_individual_aspect_ratio(person_image, individual_image)
         cv2.imshow(f"Person {i + 1}", resized_person)
