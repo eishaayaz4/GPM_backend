@@ -32,9 +32,9 @@ def login_route():
 def upload_image_route():
     return UserManagment.upoadImage()
 
-@app.route('/GetUserProcessedImages',methods=['GET'])
-def get_use_processed_images_route():
-    return UserManagment.getUserProcessedImages(1)
+@app.route('/GetUserProcessedImages/<int:id>',methods=['GET'])
+def get_use_processed_images_route(id):
+    return UserManagment.getUserProcessedImages(id)
 
 @app.route('/GetAsset/<int:id>',methods=['GET'])
 def get_assets_route(id):

@@ -1,3 +1,5 @@
+import base64
+
 import cv2
 import numpy as np
 from flask import Flask,request
@@ -16,11 +18,17 @@ def detectYolo(source):
     for result in results[0].boxes.data:
         boundingBoxes.append(result.tolist())
     return boundingBoxes
+
+def image_to_base64(image):
+    _, buffer = cv2.imencode('.jpg', image)
+    image_base64 = base64.b64encode(buffer).decode('utf-8')
+    return image_base64
+
 def removeFromGroupPhoto():
     try:
         image_path = request.files['image_path']
-        x = float(request.form.get('x'))  # Convert to float first
-        y = float(request.form.get('y'))  # Convert to float first
+        x = float(request.form.get('x'))
+        y = float(request.form.get('y'))
         image = cv2.imread(image_path)
         bounding_boxes = detectYolo(image)
 
@@ -34,6 +42,9 @@ def removeFromGroupPhoto():
 
                 # Check if the point (x, y) is within the current bounding box
                 if x1 <= round(x) <= x2 and y1 <= round(y) <= y2:
+                    # Add a point at the specified coordinates (x, y)
+                    cv2.circle(image, (int(x), int(y)), radius=5, color=(0, 0, 255), thickness=-1)
+
                     # Calculate width and height of the bounding box
                     w = x2 - x1
                     h = y2 - y1
@@ -58,6 +69,11 @@ def removeFromGroupPhoto():
                     # Apply median blur to improve background quality
                     result = cv2.medianBlur(result,
                                             1)  # You can adjust the kernel size (e.g., 3, 5, 7) based on your preference
+
+                    result_image_base64 = image_to_base64(result)
+
+                    # Return the result image as Base64
+                    return {'result_image_base64': result_image_base64}
 
                     # Display or save the result
                     cv2.imshow('Original Image', image)

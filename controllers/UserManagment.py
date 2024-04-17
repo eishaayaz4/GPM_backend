@@ -1,10 +1,13 @@
+import base64
 import os
 from datetime import datetime
 import dbHandler
-from flask import Flask, render_template,jsonify,request
+from flask import Flask, render_template, jsonify, request
 import requests
 import dbHandler as db
-from models import User as u,Asset as a
+from models import User as u, Asset as a, History as h
+
+
 def signUp():
     try:
         data = request.get_json()
@@ -15,7 +18,7 @@ def signUp():
         role = data.get('role')
 
         session = db.return_session()
-        user= u.User(name=name, password=password, email=email, role="user")
+        user = u.User(name=name, password=password, email=email, role="user")
         session.add(user)
         session.commit()
         return {"Message": "user added successfully"}, 200
@@ -28,7 +31,7 @@ def login():
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
-        role=data.get('role')
+        role = data.get('role')
         session = db.return_session()
 
         user = session.query(u.User).filter_by(email=email, password=password).first()
@@ -46,15 +49,14 @@ def upoadImage():
     try:
         user_id = request.form.get('user_id')
         image = request.files['image']
-        isAsset= request.form.get('isAsset')
-
+        isAsset = request.form.get('isAsset')
 
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
         # Save the image with the timestamp in the "assets" folder
         image.save(os.path.join('assets', f'{timestamp}_image.jpg'))
         session = db.return_session()
-        asset = a.Asset(user_id=user_id,image=f'{timestamp}_image.jpg', isAsset=isAsset )
+        asset = a.Asset(user_id=user_id, image=f'{timestamp}_image.jpg', isAsset=isAsset)
 
         session.add(asset)
         session.commit()
@@ -63,32 +65,66 @@ def upoadImage():
         return {'error': str(e)}, 500
 
 
-def getUserProcessedImages(userId):
-    return 'processed Images'
+def getUserProcessedImages(id):
+    try:
+        session = db.return_session()
+        histories = session.query(h.History).filter_by(user_id=id).all()
+
+        history_list = []
+        for history in histories:
+            history_info = {
+                "id": history.id,
+                "image": history.image,
+                "date": history.date,
+                "user_id": history.user_id,
+                "description": history.description
+                }
+            history_list.append(history_info)
+
+        if history_list:
+
+            for history_info in history_list:
+                image_filename = history_info['image']
+                image_path = os.path.join("templates", image_filename)
+
+                if os.path.exists(image_path):
+                    with open(image_path, "rb") as image_file:
+                        encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
+
+                        history_info['image'] = encoded_image
+                else:
+                    history_info['image'] = None
+
+            return history_list, 200
+        else:
+            return {"Message": "No history found for this user"}, 404
+    except Exception as e:
+        return {'error': str(e)}, 500
+
 
 def getAsset(id):
-        try:
-            print(id)
-            session = db.return_session()
-            assets = session.query(a.Asset).filter_by(user_id=id).all()
+    try:
+        print(id)
+        session = db.return_session()
+        assets = session.query(a.Asset).filter_by(user_id=id).all()
 
-            asset_list = []
-            for asset in assets:
-                asset_info = {
-                    "id": asset.id,
-                    "user_id": asset.user_id,
-                    "image": asset.image,
-                    "isAsset": asset.isAsset
-                    # Add other attributes as needed
-                }
-                asset_list.append(asset_info)
+        asset_list = []
+        for asset in assets:
+            asset_info = {
+                "id": asset.id,
+                "user_id": asset.user_id,
+                "image": asset.image,
+                "isAsset": asset.isAsset
+                # Add other attributes as needed
+            }
+            asset_list.append(asset_info)
 
-            if asset_list:
-                return asset_list, 200
-            else:
-                return {"Message": "No assets found for this user"}, 404
-        except Exception as e:
-            return {'error': str(e)}, 500
+        if asset_list:
+            return asset_list, 200
+        else:
+            return {"Message": "No assets found for this user"}, 404
+    except Exception as e:
+        return {'error': str(e)}, 500
 
 
 def RemoveAsset(asset_id):
@@ -110,5 +146,3 @@ def RemoveAsset(asset_id):
 
     except Exception as e:
         return {'error': str(e)}, 500
-
-

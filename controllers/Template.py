@@ -5,7 +5,7 @@ import dbHandler
 from flask import Flask, render_template,jsonify,request
 import requests
 import dbHandler as db
-from models import Template as t,User as u
+from models import Template as t ,User as u
 def deleteTemplate(Id):
     try:
         session = db.return_session()
@@ -74,7 +74,7 @@ def getAllTemplates():
                         encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
                         temp_info['image'] = encoded_image
                 else:
-                    temp_info['image'] = None  # or handle missing image appropriately
+                    temp_info['image'] = None
 
             return temp_list, 200
         else:
@@ -154,3 +154,6 @@ def updateTemplate(id):
 
     except Exception as e:
         return {'error': str(e)}, 500
+
+
+
