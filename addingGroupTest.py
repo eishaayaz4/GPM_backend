@@ -1,7 +1,6 @@
-
 import cv2
 from ultralytics import YOLO
-
+from rembg import remove
 def detectYolo(source):
     model = YOLO("yolov8s.pt")
     classes = [0, 1]
@@ -33,49 +32,65 @@ def calculate_average_aspect_ratio(boundingBoxes):
     aspect_ratio = avg_width / avg_height
 
     return aspect_ratio, avg_width, avg_height
-def resize_individual_image(individual_image,average_aspect_ratio,avg_height, avg_width):
-    target_width = int(avg_height * average_aspect_ratio)
-    target_height = int(avg_height)
+
+def resize_individual_image(individual_image, average_aspect_ratio, avg_height, avg_width):
+    width_multiplier = 3.5
+    height_multiplier = 1.5
+    target_width = int(avg_height * average_aspect_ratio * width_multiplier)
+    target_height = int(avg_height * height_multiplier)
     resized_individual = cv2.resize(individual_image, (target_width, target_height))
 
     return resized_individual
 
-def blend_image(resized_individual,midpoint_x,midpoint_y):
+
+def blend_image_with_alpha(resized_individual, group_image, midpoint_x, midpoint_y):
     individual_width = resized_individual.shape[1]
     individual_height = resized_individual.shape[0]
+
     target_x1 = int(midpoint_x - individual_width / 2)
     target_y1 = int(midpoint_y - individual_height / 2)
-    target_x2 = target_x1 + individual_width
-    target_y2 = target_y1 + individual_height
+    target_x2 = int(midpoint_x + individual_width / 2)
+    target_y2 = int(midpoint_y + individual_height / 2)
 
     target_x1 = max(0, target_x1)
     target_y1 = max(0, target_y1)
     target_x2 = min(group_image.shape[1], target_x2)
     target_y2 = min(group_image.shape[0], target_y2)
 
-    resized_individual = cv2.resize(individual_image, (target_x2 - target_x1, target_y2 - target_y1))
+    resized_individual = cv2.resize(resized_individual, (target_x2 - target_x1, target_y2 - target_y1))
+
+    alpha = resized_individual[:, :, 3] / 255.0
+    alpha_inv = 1.0 - alpha
 
     blended_image = group_image.copy()
-    blended_image[target_y1:target_y2, target_x1:target_x2] = resized_individual
+    for c in range(0, 3):
+        blended_image[target_y1:target_y2, target_x1:target_x2, c] = (
+            alpha * resized_individual[:, :, c] + alpha_inv * blended_image[target_y1:target_y2, target_x1:target_x2, c]
+        )
 
     return blended_image
 
-group_image = cv2.imread('assets/img.png')
-individual_image = cv2.imread('assets/ali.jpg')
-bounding_boxes = detectYolo(group_image)
 
-if bounding_boxes is not None:
-    average_aspect_ratio,avg_width,avg_height = calculate_average_aspect_ratio(bounding_boxes)
-    if average_aspect_ratio is not None:
-        resized_individual = resize_individual_image(individual_image,average_aspect_ratio,avg_height,avg_width)
+def add_to_group():
+    group_image = cv2.imread('assets/group.jpg')
+    individual = cv2.imread('assets/ali.jpg')
+    individual_img_byte = cv2.imencode(".jpg", individual)[1].tobytes()
+    output = remove(individual_img_byte)
+    with open("removed_bg.png", "wb") as output_file:
+        output_file.write(output)
+    individual_with_alpha = cv2.imread("removed_bg.png", cv2.IMREAD_UNCHANGED)
+    bounding_boxes = detectYolo(group_image)
+    if bounding_boxes is not None:
+        average_aspect_ratio,avg_width,avg_height = calculate_average_aspect_ratio(bounding_boxes)
+        if average_aspect_ratio is not None:
+            resized_individual = resize_individual_image(individual_with_alpha,average_aspect_ratio,avg_height,avg_width)
+            midpoint_x, midpoint_y = 670.60965347290039 ,282.82403564453125
+            blended_image_with_alpha = blend_image_with_alpha(resized_individual, group_image, midpoint_x,midpoint_y)
 
-        midpoint_x, midpoint_y = 814, 360
-        blended_image=blend_image(resized_individual,midpoint_x,midpoint_y)
+            cv2.imwrite("BlendedImage.png", blended_image_with_alpha)
 
-        cv2.imshow("Blended Image", blended_image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        else:
+            print("No persons detected in the group image.")
     else:
-        print("No persons detected in the group image.")
-else:
-    print("No bounding boxes detected in the group image.")
+        print("No bounding boxes detected in the group image.")
+

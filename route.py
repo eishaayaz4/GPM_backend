@@ -53,9 +53,9 @@ def save_image_route():
 def download_image_route():
     return ImageRepository.downloadImage(1,2)
 
-@app.route('/MergeWithGroupPhoto',methods=['POST'])
-def merge_with_group_photo_route():
-    return GroupManager.mergeWithGroupPhoto(1,2,'123')
+@app.route('/addToGroup',methods=['POST'])
+def addToGroup_route():
+    return GroupManager.addToGroup()
 
 @app.route('/RemoveFromGroupPhoto',methods=['POST'])
 def remove_from_group_photo_route():
