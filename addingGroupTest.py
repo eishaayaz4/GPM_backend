@@ -1,6 +1,8 @@
 import cv2
+from flask import jsonify
 from ultralytics import YOLO
 from rembg import remove
+
 def detectYolo(source):
     model = YOLO("yolov8s.pt")
     classes = [0, 1]
@@ -10,38 +12,6 @@ def detectYolo(source):
     for result in results[0].boxes.data:
         boundingBoxes.append(result.tolist())
     return boundingBoxes
-def calculate_average_aspect_ratio(boundingBoxes):
-    total_height = 0
-    total_width = 0
-    num_persons = len(boundingBoxes)
-    if num_persons == 0:
-        return None
-
-    for bounding_box in boundingBoxes:
-        x1, y1, x2, y2 = map(int, bounding_box[:4])
-        width = x2 - x1
-        height = y2 - y1
-
-        total_width+=width
-        total_height += height
-
-    avg_width=total_width/num_persons
-    avg_height=total_height/num_persons
-
-
-    aspect_ratio = avg_width / avg_height
-
-    return aspect_ratio, avg_width, avg_height
-
-def resize_individual_image(individual_image, average_aspect_ratio, avg_height, avg_width):
-    width_multiplier = 3.5
-    height_multiplier = 1.5
-    target_width = int(avg_height * average_aspect_ratio * width_multiplier)
-    target_height = int(avg_height * height_multiplier)
-    resized_individual = cv2.resize(individual_image, (target_width, target_height))
-
-    return resized_individual
-
 
 def blend_image_with_alpha(resized_individual, group_image, midpoint_x, midpoint_y):
     individual_width = resized_individual.shape[1]
@@ -72,25 +42,49 @@ def blend_image_with_alpha(resized_individual, group_image, midpoint_x, midpoint
 
 
 def add_to_group():
-    group_image = cv2.imread('assets/group.jpg')
-    individual = cv2.imread('assets/ali.jpg')
-    individual_img_byte = cv2.imencode(".jpg", individual)[1].tobytes()
-    output = remove(individual_img_byte)
-    with open("removed_bg.png", "wb") as output_file:
-        output_file.write(output)
-    individual_with_alpha = cv2.imread("removed_bg.png", cv2.IMREAD_UNCHANGED)
-    bounding_boxes = detectYolo(group_image)
-    if bounding_boxes is not None:
-        average_aspect_ratio,avg_width,avg_height = calculate_average_aspect_ratio(bounding_boxes)
-        if average_aspect_ratio is not None:
-            resized_individual = resize_individual_image(individual_with_alpha,average_aspect_ratio,avg_height,avg_width)
-            midpoint_x, midpoint_y = 670.60965347290039 ,282.82403564453125
-            blended_image_with_alpha = blend_image_with_alpha(resized_individual, group_image, midpoint_x,midpoint_y)
+    try:
+        group_image = cv2.imread('assets/group.jpg')
+        individual = cv2.imread('assets/ali.jpg')
+        individual_img_byte = cv2.imencode(".jpg", individual)[1].tobytes()
+        output = remove(individual_img_byte)
+        with open("removed_bg.png", "wb") as output_file:
+            output_file.write(output)
+        individual_with_alpha = cv2.imread("removed_bg.png", cv2.IMREAD_UNCHANGED)
+        bounding_boxes = detectYolo(group_image)
+        if bounding_boxes is not None:
+            total_height = 0
+            total_width = 0
+            num_persons = len(bounding_boxes)
+            if num_persons == 0:
+                return jsonify({'No person detected'})
+            for bounding_box in bounding_boxes:
+                x1, y1, x2, y2 = map(int, bounding_box[:4])
+                width = x2 - x1
+                height = y2 - y1
+                total_width += width
+                total_height += height
 
-            cv2.imwrite("BlendedImage.png", blended_image_with_alpha)
+            avg_width = total_width / num_persons
+            avg_height = total_height / num_persons
+
+            aspect_ratio = avg_width / avg_height
+            if aspect_ratio is not None:
+                width_multiplier = 3.5
+                height_multiplier = 1.5
+                target_width = int(avg_height * aspect_ratio * width_multiplier)
+                target_height = int(avg_height * height_multiplier)
+                resized_individual = cv2.resize(individual_with_alpha, (target_width, target_height))
+
+                midpoint_x, midpoint_y = 670.60965347290039, 282.82403564453125
+                blended_image_with_alpha = blend_image_with_alpha(resized_individual, group_image, midpoint_x, midpoint_y)
+
+                cv2.imwrite("BlendedImage.png", blended_image_with_alpha)
 
         else:
             print("No persons detected in the group image.")
-    else:
-        print("No bounding boxes detected in the group image.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+add_to_group()
+
 

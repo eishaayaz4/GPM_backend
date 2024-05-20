@@ -6,10 +6,8 @@ from sqlalchemy import Date
 class Draft(DBHandler.Base):
     __tablename__ = 'Draft'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    date = Column(Date)  # Adding a 'date' field of type Date
+    date = Column(Date)
     asset_id = Column(Integer, ForeignKey('Asset.id'))
     image = Column(String(100))
-    asset = relationship("Asset", back_populates="draft")
-
-
+    asset = relationship("Asset", back_populates="drafts")
 

@@ -1,6 +1,9 @@
 import base64
 import os
 from datetime import datetime
+
+import cv2
+
 import dbHandler
 from flask import Flask, render_template,jsonify,request
 import requests
@@ -73,8 +76,16 @@ def getAllTemplates():
                     with open(image_path, "rb") as image_file:
                         encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
                         temp_info['image'] = encoded_image
+
+                        # Calculate image height and width using OpenCV
+                        img = cv2.imread(image_path)
+                        height, width, _ = img.shape
+                        temp_info['width'] = width
+                        temp_info['height'] = height
                 else:
                     temp_info['image'] = None
+                    temp_info['width'] = None
+                    temp_info['height'] = None
 
             return temp_list, 200
         else:

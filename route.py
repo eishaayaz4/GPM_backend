@@ -9,7 +9,7 @@ def index():
 
 @app.route('/MergeWithCelebrity',methods=['POST'])
 def merge_with_celebrity_route():
-    return CelebrityMerge.mergeWithCelebrity(userId=1,image= None,celebrityPhotoId=1)
+    return CelebrityMerge.MergeWithCelebrity()
 
 @app.route('/GetAllCelebrities',methods=['GET'])
 def get_all_celebrities_route():
@@ -36,15 +36,21 @@ def upload_image_route():
 def get_use_processed_images_route(id):
     return UserManagment.getUserProcessedImages(id)
 
+@app.route('/addProcessedImage',methods=['POST'])
+def add_processed_image_route():
+    return UserManagment.addProcessedImage()
+
 @app.route('/GetAsset/<int:id>',methods=['GET'])
 def get_assets_route(id):
     return UserManagment.getAsset(id)
 
-@app.route('/RemoveAsset/<int:id>',methods=['POST'])
+@app.route( '/RemoveAsset/<int:id>',methods=['POST'])
 def Remove_asset_route(id):
     return UserManagment.RemoveAsset(id)
 
-
+@app.route( '/AddAsset',methods=['POST'])
+def Add_asset_route():
+    return UserManagment.addAsset()
 @app.route('/SaveImage',methods=['POST'])
 def save_image_route():
     return ImageRepository.saveImage(1,'123')
@@ -63,9 +69,9 @@ def remove_from_group_photo_route():
 
 @app.route('/ChangeBackground',methods=['POST'])
 def change_background_route():
-    return ChangeBackground.changeBackground(1,'123',1)
+    return ChangeBackground.ChangeBackground()
 
-@app.route('/GetAllBackgrounds',methods=['GET'])
+@app.route('/getAllBackgrounds',methods=['GET'])
 def get_all_backgrounds_route():
     return ChangeBackground.getAllBackgrounds()
 
