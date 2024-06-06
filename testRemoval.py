@@ -37,6 +37,6 @@ def remove_person(image_path, marked_coordinates):
     cv2.imwrite('result_image.jpg', result)
 
 # Example usage
-image_path = 'path/to/your/image.jpg'
+image_path = './assets/sisters.jpeg'
 marked_coordinates = (100, 30, 135, 490)
 remove_person(image_path, marked_coordinates)

@@ -8,5 +8,4 @@ class Asset(DBHandler.Base):
     user_id = Column(Integer, ForeignKey('User.id'))
     image = Column(String(100))
     isAsset = Column(CHAR(1))
-    drafts = relationship("Draft", back_populates="asset")
     user = relationship("User", back_populates="asset")

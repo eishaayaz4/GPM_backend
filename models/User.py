@@ -12,3 +12,4 @@ class User(DBHandler.Base):
     role=Column(String(100))
     histories = relationship("History", back_populates="user")
     asset = relationship("Asset", back_populates="user")
+    drafts = relationship("Draft", back_populates="user")

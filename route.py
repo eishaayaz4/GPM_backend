@@ -44,9 +44,9 @@ def add_processed_image_route():
 def get_assets_route(id):
     return UserManagment.getAsset(id)
 
-@app.route( '/RemoveAsset/<int:id>',methods=['POST'])
-def Remove_asset_route(id):
-    return UserManagment.RemoveAsset(id)
+@app.route( '/RemoveAsset',methods=['POST'])
+def Remove_asset_route():
+    return UserManagment.RemoveAsset()
 
 @app.route( '/AddAsset',methods=['POST'])
 def Add_asset_route():

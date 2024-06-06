@@ -1,13 +1,21 @@
 from sqlalchemy.orm import relationship
 from  dbHandler import DBHandler
-from models import Asset
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey,Float
 from sqlalchemy import Date
 class Draft(DBHandler.Base):
     __tablename__ = 'Draft'
     id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('User.id'))
+    group_image = Column(String(100))
+    individual_image = Column(String(100))
+    x=Column(Float)
+    y= Column(Float)
+    height = Column(Float)
+    width = Column(Float)
+    actual_height = Column(Float)
+    actual_width = Column(Float)
     date = Column(Date)
-    asset_id = Column(Integer, ForeignKey('Asset.id'))
-    image = Column(String(100))
-    asset = relationship("Asset", back_populates="drafts")
+    module=Column(String(100))
+    current_screen=Column(String(100))
+    user = relationship("User", back_populates="drafts")
 

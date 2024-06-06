@@ -139,9 +139,8 @@ def remove_person_helper(image, bounding_boxes, actual_x, actual_y):
 
                 result = image.copy()
                 result[y:y + h, x:x + w] = 0
-                result = cv2.inpaint(result, mask_inv, inpaintRadius=20, flags=cv2.INPAINT_TELEA)
+                result = cv2.inpaint(result, mask_inv, inpaintRadius=30, flags=cv2.INPAINT_TELEA)
                 result = cv2.medianBlur(result, 1)
-
                 return result
         return None
 
@@ -159,7 +158,7 @@ def removeFromGroupPhoto():
         image_height = int(float(request.form.get('imageHeight')))
 
         actual_x, actual_y = convert_coordinates(x, y, actual_image_width, actual_image_height, image_width, image_height)
-
+        print(actual_x,actual_y)
         file_stream = image_file.stream
         file_stream.seek(0)
         file_bytes = np.asarray(bytearray(file_stream.read()), dtype=np.uint8)
@@ -175,6 +174,5 @@ def removeFromGroupPhoto():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 

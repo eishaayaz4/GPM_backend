@@ -106,7 +106,7 @@ def getUserProcessedImages(id):
 
 def getAsset(id):
     try:
-        print(id)
+
         session = db.return_session()
         assets = session.query(a.Asset).filter_by(user_id=id).all()
 
@@ -174,16 +174,18 @@ def addProcessedImage():
         return jsonify({'error': str(e)}), 500
 
 
-def RemoveAsset(asset_id):
+def RemoveAsset():
     try:
-
+        asset_id = int(request.form.get('asset_id'))
+        user_id = int(request.form.get('user_id'))
+        print(user_id,asset_id)
         session = db.return_session()
-        asset_to_delete = session.query(a.Asset).filter_by(id=asset_id).first()
-
+        asset_to_delete = session.query(a.Asset).filter_by(id=asset_id,user_id=user_id).first()
+        print("----",asset_to_delete)
         if asset_to_delete:
             image_name = asset_to_delete.image
             session.delete(asset_to_delete)
-            os.remove(f'assets/{image_name}')
+            os.remove(f'user_assets/{image_name}')
             session.commit()
             session.close()
             return {"Message": "asset deleted successfully"}, 200
@@ -193,6 +195,8 @@ def RemoveAsset(asset_id):
 
     except Exception as e:
         return {'error': str(e)}, 500
+
+
 
 def addAsset():
     try:
